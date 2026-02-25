@@ -1,7 +1,8 @@
 import cv2 as cv
 import numpy as np
 
-img = cv.imread('photos/cat_large.jpg')
+img = cv.imread('photos/cat_large.jpg') # this is a larger image hence would be bigger in size and would take more time to process
+# additionally, if we would have processed the cat.jpg, it would have been faster as it is a smaller image.
 cv.imshow('cat', img)
 
 cv.waitKey(0)
