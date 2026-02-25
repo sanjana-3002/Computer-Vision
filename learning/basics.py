@@ -12,3 +12,8 @@ cv.imshow('Gray', gray)
 blur = cv.GaussianBlur(img, (7,7), cv.BORDER_DEFAULT)
 cv.imshow('Blur', blur)
 # it is used to blur the image, mainly used in edge detection
+
+# Edge Cascade
+canny = cv.Canny(img, 125, 175)
+cv.imshow('Canny Edges', canny)
+# it is used to detect edges in the image, it uses the canny edge detection algorithm
