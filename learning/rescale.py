@@ -5,7 +5,7 @@ import numpy as np
 img = cv.imread('photos/cat_large.jpg') # this is a larger image hence would be bigger in size and would take more time to process
 
 # Reading Videos
-capture = cv.VideoCapture('../Resources/Videos/dog.mp4')
+capture = cv.VideoCapture('videos/dog.mp4')
 
 while True:
     isTrue, frame = capture.read()
