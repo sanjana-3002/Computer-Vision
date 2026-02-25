@@ -9,7 +9,9 @@ cv.imshow('cat', img)
 cv.waitKey(0)
 
 # Reading videos
-capture = cv.VideoCapture('videos/dog.mp4')
+capture = cv.VideoCapture('videos/dog.mp4') 
+# here, within the path link, we can also input 0,1, and so on
+# 0 represents your web cam, and if there are any other cameras attached, it would be identified as 1,2 so on.
 
 while True:
     isTrue, frame = capture.read() # this will read the video frame by frame
