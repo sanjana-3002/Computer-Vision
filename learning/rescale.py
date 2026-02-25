@@ -17,26 +17,26 @@ def rescaleFrame(frame, scale=0.75): # we use standard scale of 0.75, which mean
 
     return cv.resize(frame, dimensions, interpolation=cv.INTER_AREA)
 
-# Alternative Method
-def changeRes(width,height):
-    # Live video
-    capture.set(3,width) # capture is the video inputted
-    capture.set(4,height)
+# # Alternative Method
+# def changeRes(width,height):
+#     # Live video
+#     capture.set(3,width) # capture is the video inputted
+#     capture.set(4,height)
 
 
-# Reading Videos
-capture = cv.VideoCapture('videos/dog.mp4')
+# # Reading Videos
+# capture = cv.VideoCapture('videos/dog.mp4')
 
-while True:
-    isTrue, frame = capture.read()
+# while True:
+#     isTrue, frame = capture.read()
 
-    frame_resized = rescaleFrame(frame, scale=.2)
+#     frame_resized = rescaleFrame(frame, scale=.2)
     
-    cv.imshow('Video', frame)
-    cv.imshow('Video Resized', frame_resized)
+#     cv.imshow('Video', frame)
+#     cv.imshow('Video Resized', frame_resized)
 
-    if cv.waitKey(20) & 0xFF==ord('d'):
-        break
+#     if cv.waitKey(20) & 0xFF==ord('d'):
+#         break
 
-capture.release()
-cv.destroyAllWindows()
+# capture.release()
+# cv.destroyAllWindows()
