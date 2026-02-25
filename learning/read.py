@@ -17,5 +17,7 @@ while True:
         cv.imshow('video', frame)
         if cv.waitKey(20) & 0xFF == ord('d'): # this will wait for 20 milliseconds and if the user presses 'd' key, it will break the loop
             break
+    else:
+        break
 capture.release() # this will release the video capture object
 cv.destroyAllWindows() # this will close all the windows that are opened by OpenCV 
