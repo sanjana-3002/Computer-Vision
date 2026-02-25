@@ -4,22 +4,6 @@ import numpy as np
 # Reading images
 img = cv.imread('photos/cat_large.jpg') # this is a larger image hence would be bigger in size and would take more time to process
 
-# Reading Videos
-capture = cv.VideoCapture('videos/dog.mp4')
-
-while True:
-    isTrue, frame = capture.read()
-
-    frame_resized = rescaleFrame(frame, scale=.2)
-    
-    cv.imshow('Video', frame)
-    cv.imshow('Video Resized', frame_resized)
-
-    if cv.waitKey(20) & 0xFF==ord('d'):
-        break
-
-capture.release()
-cv.destroyAllWindows()
 
 # Rescaling images
 # we can rescale the image to a smaller size to make it faster to process
@@ -39,3 +23,20 @@ def changeRes(width,height):
     capture.set(3,width) # capture is the video inputted
     capture.set(4,height)
 
+
+# Reading Videos
+capture = cv.VideoCapture('videos/dog.mp4')
+
+while True:
+    isTrue, frame = capture.read()
+
+    frame_resized = rescaleFrame(frame, scale=.2)
+    
+    cv.imshow('Video', frame)
+    cv.imshow('Video Resized', frame_resized)
+
+    if cv.waitKey(20) & 0xFF==ord('d'):
+        break
+
+capture.release()
+cv.destroyAllWindows()
