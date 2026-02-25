@@ -17,3 +17,9 @@ cv.imshow('Blur', blur)
 canny = cv.Canny(img, 125, 175)
 cv.imshow('Canny Edges', canny)
 # it is used to detect edges in the image, it uses the canny edge detection algorithm
+
+# Dilating the image
+dilated = cv.dilate(canny, (7,7), iterations=3)
+cv.imshow('Dilated', dilated)
+# it is used to dilate the edges in the image, it uses the dilate function
+# It thickens the edges in the image, it is used to make the edges more visible
