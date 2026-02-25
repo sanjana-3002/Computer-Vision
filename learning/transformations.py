@@ -14,3 +14,4 @@ def translate(img, x, y):
 # -y --> Up
 # x --> Right
 # y --> Down
+# it is mainly used to shift an image linearly from one axis to the other
