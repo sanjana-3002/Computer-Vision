@@ -23,3 +23,7 @@ dilated = cv.dilate(canny, (7,7), iterations=3)
 cv.imshow('Dilated', dilated)
 # it is used to dilate the edges in the image, it uses the dilate function
 # It thickens the edges in the image, it is used to make the edges more visible
+
+# Eroding the image
+eroded = cv.erode(dilated, (7,7), iterations=3)
+cv.imshow('Eroded', eroded)
