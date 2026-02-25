@@ -9,3 +9,13 @@ cv.imshow('cat', img)
 cv.waitKey(0)
 
 # Reading videos
+capture = cv.VideoCapture('videos/dog.mp4')
+
+while True:
+    isTrue, frame = capture.read() # this will read the video frame by frame
+    if isTrue:
+        cv.imshow('video', frame)
+        if cv.waitKey(20) & 0xFF == ord('d'): # this will wait for 20 milliseconds and if the user presses 'd' key, it will break the loop
+            break
+    else:
+        break   
