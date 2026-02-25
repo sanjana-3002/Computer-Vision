@@ -16,3 +16,8 @@ def rescaleFrame(frame, scale=0.75): # we use standard scale of 0.75, which mean
 
     return cv.resize(frame, dimensions, interpolation=cv.INTER_AREA)
 
+# Alternative Method
+def changeRes(width,height):
+    # Live video
+    capture.set(3,width)
+    capture.set(4,height)
