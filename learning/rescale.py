@@ -7,13 +7,12 @@ img = cv.imread('photos/cat_large.jpg') # this is a larger image hence would be 
 # Rescaling images
 # we can rescale the image to a smaller size to make it faster to process
 
-def rescaleFrame(frame, scale=0.75):
+def rescaleFrame(frame, scale=0.75): # we use standard scale of 0.75, which means we want to reduce the size of the image by 25%
     # Images, Videos and Live Video
-    width = int(frame.shape[1] * scale)
+    width = int(frame.shape[1] * scale) # frame.shape[1] gives us the new width
     height = int(frame.shape[0] * scale)
 
     dimensions = (width,height)
 
     return cv.resize(frame, dimensions, interpolation=cv.INTER_AREA)
-
 
