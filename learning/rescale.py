@@ -19,5 +19,6 @@ def rescaleFrame(frame, scale=0.75): # we use standard scale of 0.75, which mean
 # Alternative Method
 def changeRes(width,height):
     # Live video
-    capture.set(3,width)
+    capture.set(3,width) # capture is the video inputted
     capture.set(4,height)
+
