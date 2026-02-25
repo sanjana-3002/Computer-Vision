@@ -8,3 +8,7 @@ gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
 cv.imshow('Gray', gray)
 # it is used to convert the image into grayscale, mainly used in object or edge detection
 
+# Blur
+blur = cv.GaussianBlur(img, (7,7), cv.BORDER_DEFAULT)
+cv.imshow('Blur', blur)
+# it is used to blur the image, mainly used in edge detection
