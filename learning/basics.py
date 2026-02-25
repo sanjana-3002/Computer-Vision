@@ -29,4 +29,7 @@ eroded = cv.erode(dilated, (7,7), iterations=3)
 cv.imshow('Eroded', eroded)
 # Eroding is basically used to make objects smaller and remove small white noises
 
-# Dilating the image - sister of the above operation
+# Resize
+resized = cv.resize(img, (500,500), interpolation=cv.INTER_CUBIC)
+cv.imshow('Resized', resized)
+
