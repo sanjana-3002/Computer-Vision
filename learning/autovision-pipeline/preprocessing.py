@@ -257,7 +257,7 @@ class ChartPreprocessor:
 # Run it
 if __name__ == "__main__":
     import sys
-    image_path = sys.argv[1] if len(sys.argv) > 1 else "data/raw/chart1.png"
+    image_path = sys.argv[1] if len(sys.argv) > 1 else "autovision-pipeline/chart1.png"
     
     processor = ChartPreprocessor(image_path)
     
