@@ -142,17 +142,18 @@ class ChartPreprocessor:
         print("\nVisualization saved to /Users/sanjanawaghray/Documents/projects/Computer-Vision-1/learning/raw_image.webp")
 
     def apply_filters(self):
-    """
-    Day 2: Three filters, three different purposes
-    
-    Gaussian Blur  → removes random electronic noise, smooths everything
-    Median Blur    → removes salt-and-pepper noise, preserves edges better
-    Bilateral      → removes noise BUT preserves edges (best for charts)
-    
-    Key insight: for chart analysis we care about edges (candle boundaries)
-    so bilateral filter is our weapon of choice
-    """
-    
+
+        """
+        Day 2: Three filters, three different purposes
+        
+        Gaussian Blur  → removes random electronic noise, smooths everything
+        Median Blur    → removes salt-and-pepper noise, preserves edges better
+        Bilateral      → removes noise BUT preserves edges (best for charts)
+        
+        Key insight: for chart analysis we care about edges (candle boundaries)
+        so bilateral filter is our weapon of choice
+        """
+        
     gray = cv2.cvtColor(self.bgr_image, cv2.COLOR_BGR2GRAY)
     
     # --- GAUSSIAN BLUR ---
@@ -256,11 +257,14 @@ def compare_filter_edges(self):
 # Run it
 if __name__ == "__main__":
     import sys
-
-    # Use a chart image you downloaded from TradingView
-    # Or use any image to start
-    image_path = sys.argv[1] if len(sys.argv) > 1 else "/Users/sanjanawaghray/Documents/projects/Computer-Vision-1/learning/raw_image.webp'"
-
+    image_path = sys.argv[1] if len(sys.argv) > 1 else "data/raw/chart1.png"
+    
     processor = ChartPreprocessor(image_path)
+    
+    # Day 1
     processor.explore_as_array()
     processor.visualize_all()
+    
+    # Day 2
+    processor.apply_filters()
+    processor.compare_filter_edges()
