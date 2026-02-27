@@ -154,7 +154,7 @@ class ChartPreprocessor:
         so bilateral filter is our weapon of choice
         """
         
-        gray = cv2.cvtColor(self.bgr_image, cv2.COLOR_BGR2GRAY)
+        gray = cv2.cvtColor(image_path, cv2.COLOR_BGR2GRAY)
         
         # --- GAUSSIAN BLUR ---
         # Kernel size must be odd (3,5,7,9...) — why? Because it needs a center pixel
