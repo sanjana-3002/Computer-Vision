@@ -11,8 +11,8 @@ class ChartPreprocessor:
     def __init__(self, image_path: str):
         # OpenCV reads images in BGR by default (not RGB)
         # BGR = Blue, Green, Red — historical reason from early camera hardware
-        self.bgr_image = cv2.imread(image_path)
-        self.image_path = image_path
+        self.bgr_image = cv2.imread('/Users/sanjanawaghray/Documents/projects/Computer-Vision-1/learning/raw.webp')
+        self.image_path = '/Users/sanjanawaghray/Documents/projects/Computer-Vision-1/learning/raw.webp'
 
         if self.bgr_image is None:
             raise ValueError(f"Could not load image from {image_path}")
