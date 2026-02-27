@@ -141,6 +141,117 @@ class ChartPreprocessor:
         plt.show()
         print("\nVisualization saved to /Users/sanjanawaghray/Documents/projects/Computer-Vision-1/learning/raw_image.webp")
 
+    def apply_filters(self):
+    """
+    Day 2: Three filters, three different purposes
+    
+    Gaussian Blur  → removes random electronic noise, smooths everything
+    Median Blur    → removes salt-and-pepper noise, preserves edges better
+    Bilateral      → removes noise BUT preserves edges (best for charts)
+    
+    Key insight: for chart analysis we care about edges (candle boundaries)
+    so bilateral filter is our weapon of choice
+    """
+    
+    gray = cv2.cvtColor(self.bgr_image, cv2.COLOR_BGR2GRAY)
+    
+    # --- GAUSSIAN BLUR ---
+    # Kernel size must be odd (3,5,7,9...) — why? Because it needs a center pixel
+    # Higher kernel = more blur
+    # sigmaX=0 means OpenCV calculates sigma automatically from kernel size
+    gaussian = cv2.GaussianBlur(gray, (5, 5), sigmaX=0)
+    
+    # --- MEDIAN BLUR ---
+    # Replaces each pixel with the MEDIAN of its neighborhood
+    # Great for salt-and-pepper noise (random black/white pixels)
+    # Kernel must be odd integer, not a tuple
+    median = cv2.medianBlur(gray, 5)
+    
+    # --- BILATERAL FILTER ---
+    # The smart filter — blurs noise but PRESERVES edges
+    # d=9: diameter of pixel neighborhood
+    # sigmaColor=75: how much color difference is considered "same region"
+    # sigmaSpace=75: how much spatial distance affects blending
+    bilateral = cv2.bilateralFilter(gray, d=9, sigmaColor=75, sigmaSpace=75)
+    
+    # Visualize all three side by side
+    self._plot_filters(gray, gaussian, median, bilateral)
+    
+    return gaussian, median, bilateral
+
+def _plot_filters(self, original, gaussian, median, bilateral):
+    """
+    Always visualize your preprocessing steps
+    This is how you catch bugs early
+    """
+    fig, axes = plt.subplots(1, 4, figsize=(20, 5))
+    fig.suptitle('Day 2: Filtering Comparison', fontsize=16)
+    
+    images = [original, gaussian, median, bilateral]
+    titles = [
+        'Original Grayscale',
+        'Gaussian Blur\n(smooths everything)',
+        'Median Blur\n(removes speckles)',
+        'Bilateral Filter\n(preserves edges)'
+    ]
+    
+    for ax, img, title in zip(axes, images, titles):
+        ax.imshow(img, cmap='gray')
+        ax.set_title(title)
+        ax.axis('off')
+    
+    plt.tight_layout()
+    plt.savefig('data/raw/day2_filters.png', dpi=150, bbox_inches='tight')
+    plt.show()
+    print("Saved to data/raw/day2_filters.png")
+
+def compare_filter_edges(self):
+    """
+    The real test: which filter preserves chart edges best?
+    We check by running Canny edge detection AFTER each filter
+    More clean edges = better filter for our use case
+    
+    (We'll learn Canny properly on Day 3 — today just see the difference)
+    """
+    gray = cv2.cvtColor(self.bgr_image, cv2.COLOR_BGR2GRAY)
+    
+    gaussian = cv2.GaussianBlur(gray, (5, 5), 0)
+    median = cv2.medianBlur(gray, 5)
+    bilateral = cv2.bilateralFilter(gray, 9, 75, 75)
+    
+    # Quick Canny preview — don't worry about parameters yet, Day 3 covers this
+    edges_original  = cv2.Canny(gray, 50, 150)
+    edges_gaussian  = cv2.Canny(gaussian, 50, 150)
+    edges_median    = cv2.Canny(median, 50, 150)
+    edges_bilateral = cv2.Canny(bilateral, 50, 150)
+    
+    fig, axes = plt.subplots(2, 4, figsize=(20, 10))
+    fig.suptitle('Day 2: Filter → Edge Detection Comparison', fontsize=16)
+    
+    # Top row: filtered images
+    for ax, img, title in zip(
+        axes[0],
+        [gray, gaussian, median, bilateral],
+        ['Original', 'After Gaussian', 'After Median', 'After Bilateral']
+    ):
+        ax.imshow(img, cmap='gray')
+        ax.set_title(title)
+        ax.axis('off')
+    
+    # Bottom row: edges after each filter
+    for ax, img, title in zip(
+        axes[1],
+        [edges_original, edges_gaussian, edges_median, edges_bilateral],
+        ['Edges: Original', 'Edges: Gaussian', 'Edges: Median', 'Edges: Bilateral']
+    ):
+        ax.imshow(img, cmap='gray')
+        ax.set_title(title)
+        ax.axis('off')
+    
+    plt.tight_layout()
+    plt.savefig('data/raw/day2_filter_edges.png', dpi=150, bbox_inches='tight')
+    plt.show()
+    print("Saved to data/raw/day2_filter_edges.png")
 
 # Run it
 if __name__ == "__main__":
