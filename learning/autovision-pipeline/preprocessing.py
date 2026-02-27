@@ -149,7 +149,7 @@ if __name__ == "__main__":
 
     # Use a chart image you downloaded from TradingView
     # Or use any image to start
-    image_path = sys.argv[1] if len(sys.argv) > 1 else "/Users/sanjanawaghray/Documents/projects/Computer-Vision-1/learning/raw.webp'"
+    image_path = sys.argv[1] if len(sys.argv) > 1 else "/Users/sanjanawaghray/Documents/projects/Computer-Vision-1/learning/raw_image.webp'"
 
     processor = ChartPreprocessor(image_path)
     processor.explore_as_array()
