@@ -138,7 +138,7 @@ class ChartPreprocessor:
         axes[1, 2].axis('off')
 
         plt.tight_layout()
-        plt.savefig('data/raw/day1_output.png', dpi=150, bbox_inches='tight')
+        plt.savefig('/Users/sanjanawaghray/Documents/projects/Computer-Vision-1/learning/raw.webp'', dpi=150, bbox_inches='tight')
         plt.show()
         print("\nVisualization saved to data/raw/day1_output.png")
 
@@ -149,7 +149,7 @@ if __name__ == "__main__":
 
     # Use a chart image you downloaded from TradingView
     # Or use any image to start
-    image_path = sys.argv[1] if len(sys.argv) > 1 else "data/raw/chart1.png"
+    image_path = sys.argv[1] if len(sys.argv) > 1 else "/Users/sanjanawaghray/Documents/projects/Computer-Vision-1/learning/raw.webp'"
 
     processor = ChartPreprocessor(image_path)
     processor.explore_as_array()
