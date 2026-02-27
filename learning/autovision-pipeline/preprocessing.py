@@ -241,7 +241,7 @@ if __name__ == "__main__":
 
     # Pass your chart image path as a command line argument
     # Example: python opencv_pipeline.py data/raw/chart1.png
-    image_path = sys.argv[1] if len(sys.argv) > 1 else "data/raw/chart1.png"
+    image_path = sys.argv[1] if len(sys.argv) > 1 else "data/raw/chart1.webp"
 
     processor = ChartPreprocessor(image_path)
 
