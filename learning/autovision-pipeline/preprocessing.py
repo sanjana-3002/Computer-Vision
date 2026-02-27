@@ -250,7 +250,7 @@ class ChartPreprocessor:
             ax.axis('off')
         
         plt.tight_layout()
-        plt.savefig('data/raw/day2_filter_edges.png', dpi=150, bbox_inches='tight')
+        plt.savefig('autovision-pipeline/day2_filter_edges.png', dpi=150, bbox_inches='tight')
         plt.show()
         print("Saved to autovision-pipeline/day2_filter_edges.png")
 
