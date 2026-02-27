@@ -140,7 +140,7 @@ class ChartPreprocessor:
         plt.tight_layout()
         plt.savefig('/Users/sanjanawaghray/Documents/projects/Computer-Vision-1/learning/raw.webp', dpi=150, bbox_inches='tight')
         plt.show()
-        print("\nVisualization saved to /Users/sanjanawaghray/Documents/projects/Computer-Vision-1/learning/raw.webp")
+        print("\nVisualization saved to /Users/sanjanawaghray/Documents/projects/Computer-Vision-1/learning/raw_image.webp")
 
 
 # Run it
