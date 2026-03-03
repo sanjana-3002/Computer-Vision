@@ -1,0 +1,39 @@
+# ---- macOS ----
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pyre/
+.ipynb_checkpoints/
+*.log
+
+# ---- Virtual environments ----
+venv/
+.venv/
+env/
+ENV/
+virtualenv/
+pip-wheel-metadata/
+
+# ---- Builds / packaging ----
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# ---- IDE ----
+.vscode/
+.idea/
+
+# ---- Data / misc (optional) ----
+# If you don't want to push large datasets, uncomment:
+# data/
+# *.csv
+# *.parquet
