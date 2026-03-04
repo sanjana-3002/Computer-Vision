@@ -231,6 +231,146 @@ class ChartPreprocessor:
         plt.show()
         print("Saved: day2_filter_edges.png")
 
+    # ------------------------------------------------------------------
+    # DAY 3
+    # ------------------------------------------------------------------
+
+    def canny_deep_dive(self):
+
+        gray = cv2.cvtColor(self.bgr_image, cv2.COLOR_BGR2GRAY)
+
+        # STEP 1: Gaussian blur — we do this manually so we can visualize it
+        # Canny does this internally too, but doing it beforehand with
+        # bilateral gives us cleaner results (as we proved on Day 2)
+        blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+
+        # STEP 2: Sobel gradients — manually compute what Canny does internally
+        # cv2.CV_64F means output is float64 — important because gradients
+        # can be negative (dark-to-light vs light-to-dark)
+        # if you use uint8 (0-255), negative gradients get clipped to 0 and you miss edges
+        sobel_x = cv2.Sobel(blurred, cv2.CV_64F, 1, 0, ksize=3)  # vertical edges
+        sobel_y = cv2.Sobel(blurred, cv2.CV_64F, 0, 1, ksize=3)  # horizontal edges
+
+        # Convert to absolute values — we care about magnitude, not direction sign
+        sobel_x_abs = cv2.convertScaleAbs(sobel_x)
+        sobel_y_abs = cv2.convertScaleAbs(sobel_y)
+
+        # Combine X and Y into gradient magnitude
+        gradient_magnitude = cv2.magnitude(sobel_x, sobel_y)
+
+        # Normalize to 0-255 for visualization
+        gradient_magnitude = cv2.normalize(
+            gradient_magnitude, None, 0, 255, cv2.NORM_MINMAX
+        ).astype(np.uint8)
+
+        # STEP 3 + 4: Full Canny (NMS + Hysteresis happen inside)
+        canny_tight  = cv2.Canny(blurred, 100, 300)  # high thresholds — fewer, stronger edges
+        canny_medium = cv2.Canny(blurred,  50, 150)  # balanced — our default
+        canny_loose  = cv2.Canny(blurred,  20,  60)  # low thresholds — more edges, more noise
+
+        self._plot_canny_steps(
+            gray, blurred, sobel_x_abs, sobel_y_abs,
+            gradient_magnitude, canny_tight, canny_medium, canny_loose
+        )
+
+        return canny_medium  # return the balanced one for use in later pipeline
+
+    def _plot_canny_steps(self, gray, blurred, sobel_x, sobel_y,
+                          gradient, tight, medium, loose):
+        """
+        Visualize every step of the Canny algorithm.
+        Row 1: intermediate steps inside Canny
+        Row 2: effect of different threshold values
+        """
+        fig, axes = plt.subplots(2, 4, figsize=(20, 10))
+        fig.suptitle('Day 3: Canny Deep Dive', fontsize=16)
+
+        step_images = [gray, blurred, sobel_x, gradient]
+        step_titles = [
+            'Original Grayscale',
+            'Step 1: Gaussian Blur\n(noise removed)',
+            'Step 2: Sobel X\n(vertical edges)',
+            'Step 2: Gradient Magnitude\n(Gx² + Gy² combined)'
+        ]
+
+        for ax, img, title in zip(axes[0], step_images, step_titles):
+            ax.imshow(img, cmap='gray')
+            ax.set_title(title)
+            ax.axis('off')
+
+        thresh_images = [sobel_y, tight, medium, loose]
+        thresh_titles = [
+            'Step 2: Sobel Y\n(horizontal edges)',
+            'Canny tight (100/300)\nfewer, stronger edges',
+            'Canny medium (50/150)\nbalanced ← our choice',
+            'Canny loose (20/60)\nmore edges + noise'
+        ]
+
+        for ax, img, title in zip(axes[1], thresh_images, thresh_titles):
+            ax.imshow(img, cmap='gray')
+            ax.set_title(title)
+            ax.axis('off')
+
+        plt.tight_layout()
+        plt.savefig('day3_canny.png', dpi=150, bbox_inches='tight')
+        plt.show()
+        print("Saved: day3_canny.png")
+
+    def thresholding(self):
+        """
+        Day 3: Three types of thresholding.
+
+        Thresholding converts grayscale to pure black/white (binary).
+        Every pixel becomes either 0 or 255.
+
+        Simple binary   → one global cutoff value
+        Otsu            → auto-calculates optimal cutoff from histogram
+        Adaptive        → different cutoff for different regions of image
+        """
+        gray = cv2.cvtColor(self.bgr_image, cv2.COLOR_BGR2GRAY)
+
+        # SIMPLE BINARY: one global cutoff
+        _, simple = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)
+
+        # OTSU'S METHOD: auto-calculates optimal cutoff from histogram
+        otsu_thresh, otsu = cv2.threshold(
+            gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU
+        )
+        print(f"Otsu automatically chose threshold: {otsu_thresh:.1f}")
+
+        # ADAPTIVE: different cutoff per image region
+        adaptive = cv2.adaptiveThreshold(
+            gray, 255,
+            cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+            cv2.THRESH_BINARY,
+            blockSize=11,  # must be odd
+            C=2
+        )
+
+        self._plot_thresholding(gray, simple, otsu, adaptive, otsu_thresh)
+
+    def _plot_thresholding(self, gray, simple, otsu, adaptive, otsu_thresh):
+        fig, axes = plt.subplots(1, 4, figsize=(20, 5))
+        fig.suptitle('Day 3: Thresholding Comparison', fontsize=16)
+
+        images = [gray, simple, otsu, adaptive]
+        titles = [
+            'Original Grayscale',
+            'Simple Binary\n(threshold=127)',
+            f'Otsu Auto\n(threshold={otsu_thresh:.0f}, calculated)',
+            'Adaptive\n(per-region threshold)'
+        ]
+
+        for ax, img, title in zip(axes, images, titles):
+            ax.imshow(img, cmap='gray')
+            ax.set_title(title)
+            ax.axis('off')
+
+        plt.tight_layout()
+        plt.savefig('day3_threshold.png', dpi=150, bbox_inches='tight')
+        plt.show()
+        print("Saved: day3_threshold.png")
+
 
 # ------------------------------------------------------------------
 # ENTRY POINT
@@ -252,3 +392,7 @@ if __name__ == "__main__":
     # Day 2
     processor.apply_filters()
     processor.compare_filter_edges()
+
+    # Day 3
+    processor.canny_deep_dive()
+    processor.thresholding()
