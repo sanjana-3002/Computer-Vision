@@ -378,21 +378,18 @@ class ChartPreprocessor:
 
 if __name__ == "__main__":
     import sys
-
-    # Pass your chart image path as a command line argument
-    # Example: python opencv_pipeline.py data/raw/chart1.png
     image_path = sys.argv[1] if len(sys.argv) > 1 else "/Users/sanjanawaghray/Documents/projects/Computer-Vision-1/learning/data/raw/chart1.webp"
 
     processor = ChartPreprocessor(image_path)
 
-    # Day 1
-    processor.explore_as_array()
-    processor.visualize_all()
+    # Day 1 — done, comment out
+    # processor.explore_as_array()
+    # processor.visualize_all()
 
-    # Day 2
-    processor.apply_filters()
-    processor.compare_filter_edges()
+    # Day 2 — done, comment out
+    # processor.apply_filters()
+    # processor.compare_filter_edges()
 
-    # Day 3
+    # Day 3 — running today
     processor.canny_deep_dive()
     processor.thresholding()
