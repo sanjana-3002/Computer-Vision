@@ -597,6 +597,6 @@ if __name__ == "__main__":
     # processor.apply_filters()
     # processor.compare_filter_edges()
 
-    # Day 3 — running today
-    processor.canny_deep_dive()
-    processor.thresholding()
+    # Day 3 — done
+    # processor.canny_deep_dive()
+    # processor.thresholding()
