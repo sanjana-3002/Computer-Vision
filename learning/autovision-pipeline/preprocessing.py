@@ -421,6 +421,11 @@ class ChartPreprocessor:
         # these thresholds hit the sweet spot between catching real edges and avoiding noise
         canny = cv2.Canny(bilateral, 50, 150)
 
+        # define the structuring element — this is the "brush" morph ops use to probe the image
+        # MORPH_RECT = flat square kernel (as opposed to MORPH_ELLIPSE which is round)
+        # 3x3 is small enough to be precise but large enough to actually have an effect
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+
     def _plot_morphological(self, canny, eroded, dilated, opened, closed):
         """
         Private helper — just handles the matplotlib side of morphological_operations.
