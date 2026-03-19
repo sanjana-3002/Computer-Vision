@@ -493,6 +493,14 @@ class ChartPreprocessor:
         - Over 50000px is almost certainly the full chart border
         - Anything in between is a candidate for an individual candle or chart element
         """
+        # call morphological_operations to get the gap-filled edge map
+        # this also runs bilateral + Canny internally so we don't duplicate that code
+        closed = self.morphological_operations()
+
+        # RETR_EXTERNAL: only grab outermost contours, skip any holes nested inside shapes
+        # CHAIN_APPROX_SIMPLE: compress straight runs into endpoint pairs only (saves memory)
+        # findContours returns the contours list and a hierarchy array (we ignore hierarchy here)
+        contours, _ = cv2.findContours(closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
     def _plot_contours(self, original, canny, morphed, result):
         """
