@@ -529,6 +529,12 @@ class ChartPreprocessor:
                 cx = int(M["m10"] / M["m00"])  # centroid x coordinate
                 cy = int(M["m01"] / M["m00"])  # centroid y coordinate
 
+                # red dot (BGR = 0,0,255) at the centroid, radius 3, filled (-1 thickness)
+                cv2.circle(result_img, (cx, cy), 3, (0, 0, 255), -1)
+
+            # green bounding box (BGR = 0,255,0) — bottom-right corner = top-left + size
+            cv2.rectangle(result_img, (x, y), (x + w, y + h), (0, 255, 0), 2)
+
     def _plot_contours(self, original, canny, morphed, result):
         """
         Private helper — visualizes the four stages of the contour detection pipeline.
