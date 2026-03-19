@@ -431,6 +431,11 @@ class ChartPreprocessor:
         # iterations=1 means we apply the kernel once; more passes = more aggressive shrinking
         eroded = cv2.erode(canny, kernel, iterations=1)
 
+        # DILATION: for every black pixel, check if any neighbor within the kernel is white
+        # if even one neighbor is white, this pixel turns white — white regions expand outward
+        # exact opposite of erosion — edges get fatter and small gaps start to close
+        dilated = cv2.dilate(canny, kernel, iterations=1)
+
     def _plot_morphological(self, canny, eroded, dilated, opened, closed):
         """
         Private helper — just handles the matplotlib side of morphological_operations.
