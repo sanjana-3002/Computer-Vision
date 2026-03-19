@@ -480,6 +480,34 @@ class ChartPreprocessor:
         plt.show()
         print("Saved: day4_morphological.png")
 
+    def _plot_contours(self, original, canny, morphed, result):
+        """
+        Private helper — visualizes the four stages of the contour detection pipeline.
+        original and result are BGR so we convert them to RGB for matplotlib.
+        canny and morphed are grayscale so they use cmap='gray'.
+        """
+        fig, axes = plt.subplots(1, 4, figsize=(20, 5))
+        fig.suptitle('Day 4: Contour Detection', fontsize=16)
+
+        # matplotlib expects RGB, OpenCV stores BGR — have to flip the color channels
+        original_rgb = cv2.cvtColor(original, cv2.COLOR_BGR2RGB)
+        result_rgb   = cv2.cvtColor(result,   cv2.COLOR_BGR2RGB)
+
+        images = [original_rgb, canny, morphed, result_rgb]
+        titles = ['Original', 'Canny Edges', 'After Closing', 'Detected Regions']
+        # None means matplotlib will render it as a full-color image
+        cmaps  = [None, 'gray', 'gray', None]
+
+        for ax, img, title, cmap in zip(axes, images, titles, cmaps):
+            ax.imshow(img, cmap=cmap)
+            ax.set_title(title)
+            ax.axis('off')
+
+        plt.tight_layout()
+        plt.savefig('day4_contours.png', dpi=150, bbox_inches='tight')
+        plt.show()
+        print("Saved: day4_contours.png")
+
 
 # ------------------------------------------------------------------
 # ENTRY POINT
