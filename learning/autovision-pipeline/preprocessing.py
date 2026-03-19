@@ -540,6 +540,16 @@ class ChartPreprocessor:
         # thickness=1 keeps them thin so they don't swamp the bounding boxes
         cv2.drawContours(result_img, filtered, -1, (255, 255, 255), 1)
 
+        # rebuild canny for the visualization panel — we need the pre-morphology version
+        # to show the full before/after in the side-by-side plot
+        gray     = cv2.cvtColor(self.bgr_image, cv2.COLOR_BGR2GRAY)
+        bilateral_vis = cv2.bilateralFilter(gray, d=9, sigmaColor=75, sigmaSpace=75)
+        canny_vis = cv2.Canny(bilateral_vis, 50, 150)
+
+        self._plot_contours(self.bgr_image, canny_vis, closed, result_img)
+
+        return filtered, bounding_boxes
+
     def _plot_contours(self, original, canny, morphed, result):
         """
         Private helper — visualizes the four stages of the contour detection pipeline.
