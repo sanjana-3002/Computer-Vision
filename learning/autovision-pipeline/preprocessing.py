@@ -535,6 +535,11 @@ class ChartPreprocessor:
             # green bounding box (BGR = 0,255,0) — bottom-right corner = top-left + size
             cv2.rectangle(result_img, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
+        # draw the actual contour outlines in white on top of everything
+        # -1 as the contour index means "draw all of them" in one call
+        # thickness=1 keeps them thin so they don't swamp the bounding boxes
+        cv2.drawContours(result_img, filtered, -1, (255, 255, 255), 1)
+
     def _plot_contours(self, original, canny, morphed, result):
         """
         Private helper — visualizes the four stages of the contour detection pipeline.
