@@ -15,6 +15,30 @@ Q: Why do we filter BEFORE edge detection, not after?
 A: Edge detectors (like Canny) work by finding pixel intensity gradients.
    Noise creates false gradients → false edges.
    Filtering first removes noise so only real structural edges are detected.
+
+Interview Q&A — Day 4:
+
+Q: What's the difference between erosion and dilation?
+A: Erosion shrinks white regions — any white pixel touching a black pixel becomes black.
+   Dilation expands white regions — any black pixel touching a white pixel becomes white.
+   Think of erosion as "eating away" the edges of white blobs from outside in.
+
+Q: When would you use opening vs closing?
+A: Opening (erode then dilate) removes small isolated white dots (noise) without
+   affecting larger continuous structures. Use it when Canny gives you speckle noise.
+   Closing (dilate then erode) fills small gaps in white lines without changing their
+   overall shape. Use it when Canny breaks up continuous edges — which happens a lot
+   on stock chart candle wicks.
+
+Q: Why use RETR_EXTERNAL instead of RETR_TREE for chart analysis?
+A: RETR_TREE gives you every contour including nested ones (holes inside shapes).
+   For individual candle detection we only care about the outer boundary of each region.
+   RETR_EXTERNAL skips the inner contours and runs faster — less noise to filter out.
+
+Q: What does CHAIN_APPROX_SIMPLE do and why does it matter?
+A: It compresses contour representations by only storing the endpoints of straight segments.
+   A rectangle stored with CHAIN_APPROX_NONE would have hundreds of points along each side.
+   CHAIN_APPROX_SIMPLE stores just the 4 corners. Faster, less memory, same shape information.
 """
 
 import cv2
