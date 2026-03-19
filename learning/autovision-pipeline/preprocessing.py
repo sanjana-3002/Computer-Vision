@@ -417,6 +417,10 @@ class ChartPreprocessor:
         # chart images on Day 2 because it smooths noise while keeping candle edges sharp
         bilateral = cv2.bilateralFilter(gray, d=9, sigmaColor=75, sigmaSpace=75)
 
+        # run Canny on the bilateral output — 50/150 is our "medium" setting from Day 3
+        # these thresholds hit the sweet spot between catching real edges and avoiding noise
+        canny = cv2.Canny(bilateral, 50, 150)
+
     def _plot_morphological(self, canny, eroded, dilated, opened, closed):
         """
         Private helper — just handles the matplotlib side of morphological_operations.
