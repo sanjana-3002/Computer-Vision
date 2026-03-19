@@ -400,6 +400,23 @@ class ChartPreprocessor:
     # DAY 4
     # ------------------------------------------------------------------
 
+    def morphological_operations(self):
+        """
+        Morphological operations reshape the white regions in a binary/edge image.
+        We feed them the Canny output from Day 3 and transform it four different ways
+        to understand what each operation does to stock chart edge lines.
+
+        The pipeline here is: grayscale → bilateral filter → Canny → morph ops.
+        We rerun bilateral+Canny internally instead of accepting them as params
+        so this method is self-contained and callable from find_candle_contours too.
+        """
+        # first convert to grayscale — all our processing lives in single-channel space
+        gray = cv2.cvtColor(self.bgr_image, cv2.COLOR_BGR2GRAY)
+
+        # bilateral filter before Canny — we validated this is the best filter for
+        # chart images on Day 2 because it smooths noise while keeping candle edges sharp
+        bilateral = cv2.bilateralFilter(gray, d=9, sigmaColor=75, sigmaSpace=75)
+
     def _plot_morphological(self, canny, eroded, dilated, opened, closed):
         """
         Private helper — just handles the matplotlib side of morphological_operations.
