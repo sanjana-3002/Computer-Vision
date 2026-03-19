@@ -522,6 +522,13 @@ class ChartPreprocessor:
             x, y, w, h = cv2.boundingRect(contour)
             bounding_boxes.append((x, y, w, h))
 
+            # moments are weighted pixel sums — m00 is total area (like mass),
+            # m10/m01 are the x/y weighted sums used to find center of mass
+            M = cv2.moments(contour)
+            if M["m00"] != 0:   # guard against divide-by-zero on degenerate contours
+                cx = int(M["m10"] / M["m00"])  # centroid x coordinate
+                cy = int(M["m01"] / M["m00"])  # centroid y coordinate
+
     def _plot_contours(self, original, canny, morphed, result):
         """
         Private helper — visualizes the four stages of the contour detection pipeline.
