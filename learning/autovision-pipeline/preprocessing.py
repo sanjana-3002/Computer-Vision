@@ -512,6 +512,16 @@ class ChartPreprocessor:
 
         print(f"Contours after area filter ({MIN_AREA}–{MAX_AREA}px²): {len(filtered)}")
 
+        # work on a copy so we don't permanently draw on self.bgr_image
+        result_img    = self.bgr_image.copy()
+        bounding_boxes = []
+
+        for contour in filtered:
+            # boundingRect gives the smallest upright rectangle that contains this contour
+            # returns top-left corner (x, y) and dimensions (w, h)
+            x, y, w, h = cv2.boundingRect(contour)
+            bounding_boxes.append((x, y, w, h))
+
     def _plot_contours(self, original, canny, morphed, result):
         """
         Private helper — visualizes the four stages of the contour detection pipeline.
