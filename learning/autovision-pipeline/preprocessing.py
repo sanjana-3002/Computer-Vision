@@ -426,6 +426,11 @@ class ChartPreprocessor:
         # 3x3 is small enough to be precise but large enough to actually have an effect
         kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
 
+        # EROSION: for every white pixel, check if all neighbors within the kernel are white
+        # if even one neighbor is black, this pixel turns black — white regions shrink inward
+        # iterations=1 means we apply the kernel once; more passes = more aggressive shrinking
+        eroded = cv2.erode(canny, kernel, iterations=1)
+
     def _plot_morphological(self, canny, eroded, dilated, opened, closed):
         """
         Private helper — just handles the matplotlib side of morphological_operations.
