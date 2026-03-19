@@ -436,6 +436,12 @@ class ChartPreprocessor:
         # exact opposite of erosion — edges get fatter and small gaps start to close
         dilated = cv2.dilate(canny, kernel, iterations=1)
 
+        # OPENING = erosion followed by dilation using the same kernel
+        # small isolated white specks get eroded away and never come back during dilation
+        # but larger continuous edge lines survive because they're wide enough to regrow
+        # use this when Canny produces a lot of scattered noise dots
+        opened = cv2.morphologyEx(canny, cv2.MORPH_OPEN, kernel)
+
     def _plot_morphological(self, canny, eroded, dilated, opened, closed):
         """
         Private helper — just handles the matplotlib side of morphological_operations.
