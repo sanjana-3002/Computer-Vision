@@ -502,6 +502,16 @@ class ChartPreprocessor:
         # findContours returns the contours list and a hierarchy array (we ignore hierarchy here)
         contours, _ = cv2.findContours(closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
+        print(f"\nTotal contours found before filtering: {len(contours)}")
+
+        # throw out anything suspiciously small (noise) or suspiciously large (chart border)
+        MIN_AREA = 100    # below this = almost certainly a compression artifact or noise speck
+        MAX_AREA = 50000  # above this = almost certainly the whole chart frame, not a candle
+
+        filtered = [c for c in contours if MIN_AREA < cv2.contourArea(c) < MAX_AREA]
+
+        print(f"Contours after area filter ({MIN_AREA}–{MAX_AREA}px²): {len(filtered)}")
+
     def _plot_contours(self, original, canny, morphed, result):
         """
         Private helper — visualizes the four stages of the contour detection pipeline.
