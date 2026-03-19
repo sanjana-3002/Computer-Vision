@@ -480,6 +480,20 @@ class ChartPreprocessor:
         plt.show()
         print("Saved: day4_morphological.png")
 
+    def find_candle_contours(self):
+        """
+        Finds and filters contours from the morphological closing result.
+
+        Contours are the outlines of connected white regions in a binary image.
+        We use the closed edge map (not raw Canny) because closing fills the tiny gaps
+        that would otherwise split one candle body into many small disconnected contours.
+
+        Area filtering is the key step here:
+        - Under 100px is almost certainly sensor/compression noise
+        - Over 50000px is almost certainly the full chart border
+        - Anything in between is a candidate for an individual candle or chart element
+        """
+
     def _plot_contours(self, original, canny, morphed, result):
         """
         Private helper — visualizes the four stages of the contour detection pipeline.
