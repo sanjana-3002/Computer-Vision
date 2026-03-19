@@ -600,3 +600,7 @@ if __name__ == "__main__":
     # Day 3 — done
     # processor.canny_deep_dive()
     # processor.thresholding()
+
+    # Day 4 — running today
+    processor.morphological_operations()
+    processor.find_candle_contours()
