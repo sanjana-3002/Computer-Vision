@@ -442,6 +442,17 @@ class ChartPreprocessor:
         # use this when Canny produces a lot of scattered noise dots
         opened = cv2.morphologyEx(canny, cv2.MORPH_OPEN, kernel)
 
+        # CLOSING = dilation followed by erosion using the same kernel
+        # tiny gaps in edge lines get bridged by dilation, then erosion restores the thickness
+        # Canny often breaks candle body edges at low-contrast spots — closing reconnects them
+        # this is why closing is the most useful output for our candle detection pipeline
+        closed = cv2.morphologyEx(canny, cv2.MORPH_CLOSE, kernel)
+
+        self._plot_morphological(canny, eroded, dilated, opened, closed)
+
+        # return closing because it gives us the most complete, gap-free edge map for contours
+        return closed
+
     def _plot_morphological(self, canny, eroded, dilated, opened, closed):
         """
         Private helper — just handles the matplotlib side of morphological_operations.
