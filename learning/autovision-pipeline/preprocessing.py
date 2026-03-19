@@ -259,6 +259,7 @@ class ChartPreprocessor:
     # DAY 3
     # ------------------------------------------------------------------
 
+
     def canny_deep_dive(self):
 
         gray = cv2.cvtColor(self.bgr_image, cv2.COLOR_BGR2GRAY)
@@ -394,6 +395,37 @@ class ChartPreprocessor:
         plt.savefig('day3_threshold.png', dpi=150, bbox_inches='tight')
         plt.show()
         print("Saved: day3_threshold.png")
+
+    # ------------------------------------------------------------------
+    # DAY 4
+    # ------------------------------------------------------------------
+
+    def _plot_morphological(self, canny, eroded, dilated, opened, closed):
+        """
+        Private helper — just handles the matplotlib side of morphological_operations.
+        Kept separate so the main method stays focused on the actual CV logic.
+        """
+        fig, axes = plt.subplots(1, 5, figsize=(25, 5))
+        fig.suptitle('Day 4: Morphological Operations', fontsize=16)
+
+        images = [canny, eroded, dilated, opened, closed]
+        titles = [
+            'Canny Input',
+            'Erosion\n(shrinks white)',
+            'Dilation\n(expands white)',
+            'Opening\n(removes noise)',
+            'Closing\n(fills gaps) ← our choice'
+        ]
+
+        for ax, img, title in zip(axes, images, titles):
+            ax.imshow(img, cmap='gray')
+            ax.set_title(title)
+            ax.axis('off')
+
+        plt.tight_layout()
+        plt.savefig('day4_morphological.png', dpi=150, bbox_inches='tight')
+        plt.show()
+        print("Saved: day4_morphological.png")
 
 
 # ------------------------------------------------------------------
