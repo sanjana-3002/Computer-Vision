@@ -515,27 +515,37 @@ class ChartPreprocessor:
         print(f"Contours after area filter ({MIN_AREA}–{MAX_AREA}px²): {len(filtered)}")
 
         # work on a copy so we don't permanently draw on self.bgr_image
-        result_img    = self.bgr_image.copy()
-        bounding_boxes = []
+        result_img = self.bgr_image.copy()
+        detections = []
 
         for contour in filtered:
             # boundingRect gives the smallest upright rectangle that contains this contour
             # returns top-left corner (x, y) and dimensions (w, h)
             x, y, w, h = cv2.boundingRect(contour)
-            bounding_boxes.append((x, y, w, h))
+
+            area = cv2.contourArea(contour)
 
             # moments are weighted pixel sums — m00 is total area (like mass),
             # m10/m01 are the x/y weighted sums used to find center of mass
             M = cv2.moments(contour)
+            centroid = None
             if M["m00"] != 0:   # guard against divide-by-zero on degenerate contours
                 cx = int(M["m10"] / M["m00"])  # centroid x coordinate
                 cy = int(M["m01"] / M["m00"])  # centroid y coordinate
+                centroid = (cx, cy)
 
-                # red dot (BGR = 0,0,255) at the centroid, radius 3, filled (-1 thickness)
-                cv2.circle(result_img, (cx, cy), 3, (0, 0, 255), -1)
+                # red filled circle (BGR = 0,0,255) at the centroid, radius 4
+                cv2.circle(result_img, (cx, cy), 4, (0, 0, 255), -1)
 
-            # green bounding box (BGR = 0,255,0) — bottom-right corner = top-left + size
+            # green bounding box (BGR = 0,255,0), thickness 2 — bottom-right = top-left + size
             cv2.rectangle(result_img, (x, y), (x + w, y + h), (0, 255, 0), 2)
+
+            detections.append({
+                "contour":  contour,
+                "bbox":     (x, y, w, h),
+                "centroid": centroid,
+                "area":     area,
+            })
 
         # draw the actual contour outlines in white on top of everything
         # -1 as the contour index means "draw all of them" in one call
@@ -544,13 +554,13 @@ class ChartPreprocessor:
 
         # rebuild canny for the visualization panel — we need the pre-morphology version
         # to show the full before/after in the side-by-side plot
-        gray     = cv2.cvtColor(self.bgr_image, cv2.COLOR_BGR2GRAY)
+        gray          = cv2.cvtColor(self.bgr_image, cv2.COLOR_BGR2GRAY)
         bilateral_vis = cv2.bilateralFilter(gray, d=9, sigmaColor=75, sigmaSpace=75)
-        canny_vis = cv2.Canny(bilateral_vis, 50, 150)
+        canny_vis     = cv2.Canny(bilateral_vis, 50, 150)
 
         self._plot_contours(self.bgr_image, canny_vis, closed, result_img)
 
-        return filtered, bounding_boxes
+        return detections
 
     def _plot_contours(self, original, canny, morphed, result):
         """
