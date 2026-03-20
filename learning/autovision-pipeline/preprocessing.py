@@ -421,32 +421,34 @@ class ChartPreprocessor:
         # these thresholds hit the sweet spot between catching real edges and avoiding noise
         canny = cv2.Canny(bilateral, 50, 150)
 
-        # define the structuring element — this is the "brush" morph ops use to probe the image
-        # MORPH_RECT = flat square kernel (as opposed to MORPH_ELLIPSE which is round)
-        # 3x3 is small enough to be precise but large enough to actually have an effect
-        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+        # cross-shaped kernel for erosion and opening — only touches the 4 cardinal neighbors
+        # (center + up/down/left/right), not the 4 diagonal corners
+        # Canny edges are exactly 1 pixel wide — a 3x3 rect kernel checks 8 neighbors and
+        # a single-pixel line fails the "all neighbors must be white" erosion test, turning black
+        # the cross only checks 4 neighbors so thin 1-pixel lines can survive erosion
+        kernel_small = cv2.getStructuringElement(cv2.MORPH_CROSS, (3, 3))
 
-        # EROSION: for every white pixel, check if all neighbors within the kernel are white
-        # if even one neighbor is black, this pixel turns black — white regions shrink inward
-        # iterations=1 means we apply the kernel once; more passes = more aggressive shrinking
-        eroded = cv2.erode(canny, kernel, iterations=1)
+        # rectangular kernel for dilation and closing — checks all 8 neighbors (full 3x3 square)
+        # more aggressive coverage is exactly what we want when expanding or filling gaps:
+        # we want dilation to reach diagonally adjacent pixels so tiny gaps bridge properly
+        kernel_rect = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
 
-        # DILATION: for every black pixel, check if any neighbor within the kernel is white
-        # if even one neighbor is white, this pixel turns white — white regions expand outward
-        # exact opposite of erosion — edges get fatter and small gaps start to close
-        dilated = cv2.dilate(canny, kernel, iterations=1)
+        # EROSION with cross kernel: thin 1-pixel Canny edges can survive because the cross
+        # touches fewer pixels — a rect kernel would wipe them out completely (all black result)
+        eroded = cv2.erode(canny, kernel_small, iterations=1)
 
-        # OPENING = erosion followed by dilation using the same kernel
-        # small isolated white specks get eroded away and never come back during dilation
-        # but larger continuous edge lines survive because they're wide enough to regrow
-        # use this when Canny produces a lot of scattered noise dots
-        opened = cv2.morphologyEx(canny, cv2.MORPH_OPEN, kernel)
+        # DILATION with rect kernel: more aggressive 8-neighbor check expands edges outward
+        # and starts to bridge tiny gaps — rect is fine here because we're adding pixels, not removing
+        dilated = cv2.dilate(canny, kernel_rect, iterations=1)
 
-        # CLOSING = dilation followed by erosion using the same kernel
-        # tiny gaps in edge lines get bridged by dilation, then erosion restores the thickness
-        # Canny often breaks candle body edges at low-contrast spots — closing reconnects them
-        # this is why closing is the most useful output for our candle detection pipeline
-        closed = cv2.morphologyEx(canny, cv2.MORPH_CLOSE, kernel)
+        # OPENING with cross kernel: erode-then-dilate — small isolated specks disappear but
+        # 1-pixel-wide Canny lines survive the erosion step because cross is gentler than rect
+        opened = cv2.morphologyEx(canny, cv2.MORPH_OPEN, kernel_small)
+
+        # CLOSING with rect kernel: dilate-then-erode — rect dilation aggressively bridges gaps
+        # in broken candle edges, then erosion pulls the thickness back to normal
+        # most useful output for contour detection because gap-free edges = whole candle contours
+        closed = cv2.morphologyEx(canny, cv2.MORPH_CLOSE, kernel_rect)
 
         self._plot_morphological(canny, eroded, dilated, opened, closed)
 
