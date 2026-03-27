@@ -47,7 +47,36 @@ import matplotlib.pyplot as plt
 
 class ChartPreprocessor:
     """
-    Day 1 + Day 2: Image representations, color spaces, and filtering
+    Preprocesses raw stock chart screenshots for computer vision analysis.
+
+    Wraps a full image processing pipeline that goes from a raw screenshot
+    to a clean, filtered, edge-detected, and contour-labeled output ready
+    for downstream ML training.
+
+    Pipeline overview (in order):
+        1. Load image → explore as NumPy array, convert color spaces, resize
+        2. Apply filters → Gaussian, Median, Bilateral; compare edge quality
+        3. Edge detection → Canny deep dive, thresholding (binary, Otsu, adaptive)
+        4. Morphological ops → erosion, dilation, opening, closing on Canny output
+        5. Contour detection → find candle regions, filter by area, draw boxes
+        6. Corner detection → Harris corners to find candle turning points
+        7. Region isolation → crop out device frame, keep only the chart area
+        8. Full pipeline → run all steps end to end and log timing
+
+    Methods grouped by day:
+        Day 1: explore_as_array, convert_color_spaces, resize_and_crop, visualize_all
+        Day 2: apply_filters, compare_filter_edges
+        Day 3: canny_deep_dive, thresholding
+        Day 4: morphological_operations, find_candle_contours,
+               harris_corners, isolate_chart_region
+        All:   run_full_pipeline
+
+    Example usage:
+        processor = ChartPreprocessor("data/raw/chart1.webp")
+        processor.apply_filters()
+        contours = processor.find_candle_contours()
+        isolated = processor.isolate_chart_region()
+        results  = processor.run_full_pipeline()
     """
 
     def __init__(self, image_path: str):
