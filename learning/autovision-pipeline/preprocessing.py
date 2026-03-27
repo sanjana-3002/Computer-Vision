@@ -562,6 +562,125 @@ class ChartPreprocessor:
 
         return detections
 
+    def harris_corners(self):
+        """
+        Harris corner detection finds points where pixel intensity changes
+        sharply in multiple directions at once — that is a corner, not just an edge.
+
+        For stock chart analysis this is useful because the tops and bottoms of
+        candle wicks are corners in the edge image. Harris picks them up reliably
+        even when there is mild compression noise in the screenshot.
+
+        Why k=0.04: this is the standard value from the original Harris & Stephens
+        1988 paper. Lower k catches more corners but also more false positives;
+        higher k misses real corners. 0.04 is the safe default used in almost
+        every CV textbook and production system.
+        """
+        gray = cv2.cvtColor(self.bgr_image, cv2.COLOR_BGR2GRAY)
+
+        # Harris requires float32 — integer types lose the small fractional gradient values
+        gray_float = np.float32(gray)
+
+        # blockSize=2 → size of neighborhood for computing the covariance matrix
+        # ksize=3     → Sobel kernel size used internally to compute gradients
+        # k=0.04      → Harris sensitivity parameter (standard value)
+        harris_response = cv2.cornerHarris(gray_float, blockSize=2, ksize=3, k=0.04)
+
+        # dilate the response map so corner peaks are more visible in the heatmap
+        harris_dilated = cv2.dilate(harris_response, None)
+
+        # anything above 1% of the max response is considered a strong corner
+        threshold = 0.01 * harris_dilated.max()
+        corner_mask = harris_dilated > threshold
+
+        corners_detected = int(np.sum(corner_mask))
+        print(f"\nHarris corners detected: {corners_detected}")
+
+        # mark corners as red pixels on a copy of the original image
+        result_img = self.bgr_image.copy()
+        result_img[corner_mask] = [0, 0, 255]  # BGR red
+
+        self._plot_harris(harris_response, result_img)
+
+        return result_img
+
+    def _plot_harris(self, harris_response, corners_img):
+        fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+        fig.suptitle('Day 4: Harris Corner Detection', fontsize=16)
+
+        original_rgb = cv2.cvtColor(self.bgr_image, cv2.COLOR_BGR2RGB)
+        corners_rgb  = cv2.cvtColor(corners_img,    cv2.COLOR_BGR2RGB)
+
+        images = [original_rgb, harris_response, corners_rgb]
+        titles = ['Original', 'Harris Response Heatmap', 'Detected Corners (red)']
+        cmaps  = [None, 'hot', None]
+
+        for ax, img, title, cmap in zip(axes, images, titles, cmaps):
+            ax.imshow(img, cmap=cmap)
+            ax.set_title(title)
+            ax.axis('off')
+
+        plt.tight_layout()
+        plt.savefig('day4_harris.png', dpi=150, bbox_inches='tight')
+        plt.show()
+        print("Saved: day4_harris.png")
+
+    def isolate_chart_region(self):
+        """
+        Crops the actual chart area out of an iPad trading app screenshot.
+
+        iPad screenshots include device bezels, app toolbars, and system UI chrome
+        around the chart. This method finds the largest contour in the image —
+        which is almost always the chart frame or border — and crops to that
+        bounding box. Downstream steps get a cleaner, tighter input with less
+        irrelevant background.
+        """
+        gray = cv2.cvtColor(self.bgr_image, cv2.COLOR_BGR2GRAY)
+
+        # bilateral before Canny — same reasoning as morphological_operations:
+        # smooth noise without blurring the chart border edges we want to detect
+        bilateral = cv2.bilateralFilter(gray, d=9, sigmaColor=75, sigmaSpace=75)
+
+        canny = cv2.Canny(bilateral, 50, 150)
+
+        # RETR_EXTERNAL is enough here — we want the outermost frame, not inner elements
+        contours, _ = cv2.findContours(canny, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        if not contours:
+            print("No contours found — returning original image unchanged")
+            return self.bgr_image
+
+        # the largest contour by area is the chart border/frame
+        largest_contour = max(contours, key=cv2.contourArea)
+        x, y, w, h = cv2.boundingRect(largest_contour)
+
+        # crop the original BGR image to just the chart bounding box
+        cropped = self.bgr_image[y:y + h, x:x + w]
+
+        print(f"\nOriginal size:   {self.bgr_image.shape[:2]}")
+        print(f"Isolated chart:  {cropped.shape[:2]}")
+
+        self._plot_isolation(self.bgr_image, cropped)
+
+        return cropped
+
+    def _plot_isolation(self, original, cropped):
+        fig, axes = plt.subplots(1, 2, figsize=(12, 6))
+        fig.suptitle('Day 4: Chart Region Isolation', fontsize=16)
+
+        axes[0].imshow(cv2.cvtColor(original, cv2.COLOR_BGR2RGB))
+        axes[0].set_title(f'Original\n{original.shape[:2]}')
+        axes[0].axis('off')
+
+        axes[1].imshow(cv2.cvtColor(cropped, cv2.COLOR_BGR2RGB))
+        axes[1].set_title(f'Isolated Chart\n{cropped.shape[:2]}')
+        axes[1].axis('off')
+
+        plt.tight_layout()
+        plt.savefig('day4_isolated.png', dpi=150, bbox_inches='tight')
+        plt.show()
+        print("Saved: day4_isolated.png")
+
     def _plot_contours(self, original, canny, morphed, result):
         """
         Private helper — visualizes the four stages of the contour detection pipeline.
