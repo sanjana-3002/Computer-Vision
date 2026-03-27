@@ -88,6 +88,21 @@ class ChartPreprocessor:
         if self.bgr_image is None:
             raise ValueError(f"Could not load image from {image_path}")
 
+        # all tunable numbers live here — change one place and every method picks it up
+        self.config = {
+            'bilateral_d':           9,
+            'bilateral_sigma_color': 75,
+            'bilateral_sigma_space': 75,
+            'canny_low':             50,
+            'canny_high':            150,
+            'morph_kernel_size':     3,
+            'contour_min_area':      100,
+            'contour_max_area':      50000,
+            'harris_block_size':     2,
+            'harris_k':              0.04,
+            'resize_target':         (224, 224),
+        }
+
         print(f"Image loaded successfully")
         print(f"Shape: {self.bgr_image.shape}")   # (height, width, channels)
         print(f"dtype: {self.bgr_image.dtype}")   # uint8 = values 0-255
@@ -138,6 +153,7 @@ class ChartPreprocessor:
         224x224 is the standard ResNet input size.
         INTER_AREA is best for shrinking (less aliasing).
         """
+        target_size = self.config['resize_target']
         resized = cv2.resize(
             self.bgr_image,
             target_size,            # cv2.resize takes (width, height) — note: flipped vs shape!
@@ -213,7 +229,12 @@ class ChartPreprocessor:
         # sigmaColor  → pixels must be within 75 intensity units to be blended
         # sigmaSpace  → pixels must be within 75 spatial units to be blended
         # Result: nearby pixels with similar color blend; edges (big color jump) are kept sharp
-        bilateral = cv2.bilateralFilter(gray, d=9, sigmaColor=75, sigmaSpace=75)
+        bilateral = cv2.bilateralFilter(
+            gray,
+            d=self.config['bilateral_d'],
+            sigmaColor=self.config['bilateral_sigma_color'],
+            sigmaSpace=self.config['bilateral_sigma_space'],
+        )
 
         self._plot_filters(gray, gaussian, median, bilateral)
         return gaussian, median, bilateral
@@ -251,12 +272,18 @@ class ChartPreprocessor:
 
         gaussian  = cv2.GaussianBlur(gray, (5, 5), 0)
         median    = cv2.medianBlur(gray, 5)
-        bilateral = cv2.bilateralFilter(gray, 9, 75, 75)
+        bilateral = cv2.bilateralFilter(
+            gray,
+            d=self.config['bilateral_d'],
+            sigmaColor=self.config['bilateral_sigma_color'],
+            sigmaSpace=self.config['bilateral_sigma_space'],
+        )
 
-        edges_original  = cv2.Canny(gray,      50, 150)
-        edges_gaussian  = cv2.Canny(gaussian,  50, 150)
-        edges_median    = cv2.Canny(median,    50, 150)
-        edges_bilateral = cv2.Canny(bilateral, 50, 150)
+        lo, hi = self.config['canny_low'], self.config['canny_high']
+        edges_original  = cv2.Canny(gray,      lo, hi)
+        edges_gaussian  = cv2.Canny(gaussian,  lo, hi)
+        edges_median    = cv2.Canny(median,    lo, hi)
+        edges_bilateral = cv2.Canny(bilateral, lo, hi)
 
         fig, axes = plt.subplots(2, 4, figsize=(20, 10))
         fig.suptitle('Day 2: Filter → Edge Detection Comparison', fontsize=16)
@@ -444,23 +471,29 @@ class ChartPreprocessor:
 
         # bilateral filter before Canny — we validated this is the best filter for
         # chart images on Day 2 because it smooths noise while keeping candle edges sharp
-        bilateral = cv2.bilateralFilter(gray, d=9, sigmaColor=75, sigmaSpace=75)
+        bilateral = cv2.bilateralFilter(
+            gray,
+            d=self.config['bilateral_d'],
+            sigmaColor=self.config['bilateral_sigma_color'],
+            sigmaSpace=self.config['bilateral_sigma_space'],
+        )
 
         # run Canny on the bilateral output — 50/150 is our "medium" setting from Day 3
         # these thresholds hit the sweet spot between catching real edges and avoiding noise
-        canny = cv2.Canny(bilateral, 50, 150)
+        canny = cv2.Canny(bilateral, self.config['canny_low'], self.config['canny_high'])
 
         # cross-shaped kernel for erosion and opening — only touches the 4 cardinal neighbors
         # (center + up/down/left/right), not the 4 diagonal corners
         # Canny edges are exactly 1 pixel wide — a 3x3 rect kernel checks 8 neighbors and
         # a single-pixel line fails the "all neighbors must be white" erosion test, turning black
         # the cross only checks 4 neighbors so thin 1-pixel lines can survive erosion
-        kernel_small = cv2.getStructuringElement(cv2.MORPH_CROSS, (3, 3))
+        ks = self.config['morph_kernel_size']
+        kernel_small = cv2.getStructuringElement(cv2.MORPH_CROSS, (ks, ks))
 
         # rectangular kernel for dilation and closing — checks all 8 neighbors (full 3x3 square)
         # more aggressive coverage is exactly what we want when expanding or filling gaps:
         # we want dilation to reach diagonally adjacent pixels so tiny gaps bridge properly
-        kernel_rect = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+        kernel_rect = cv2.getStructuringElement(cv2.MORPH_RECT, (ks, ks))
 
         # EROSION with cross kernel: thin 1-pixel Canny edges can survive because the cross
         # touches fewer pixels — a rect kernel would wipe them out completely (all black result)
@@ -536,8 +569,8 @@ class ChartPreprocessor:
         print(f"\nTotal contours found before filtering: {len(contours)}")
 
         # throw out anything suspiciously small (noise) or suspiciously large (chart border)
-        MIN_AREA = 100    # below this = almost certainly a compression artifact or noise speck
-        MAX_AREA = 50000  # above this = almost certainly the whole chart frame, not a candle
+        MIN_AREA = self.config['contour_min_area']
+        MAX_AREA = self.config['contour_max_area']
 
         filtered = [c for c in contours if MIN_AREA < cv2.contourArea(c) < MAX_AREA]
 
@@ -584,8 +617,13 @@ class ChartPreprocessor:
         # rebuild canny for the visualization panel — we need the pre-morphology version
         # to show the full before/after in the side-by-side plot
         gray          = cv2.cvtColor(self.bgr_image, cv2.COLOR_BGR2GRAY)
-        bilateral_vis = cv2.bilateralFilter(gray, d=9, sigmaColor=75, sigmaSpace=75)
-        canny_vis     = cv2.Canny(bilateral_vis, 50, 150)
+        bilateral_vis = cv2.bilateralFilter(
+            gray,
+            d=self.config['bilateral_d'],
+            sigmaColor=self.config['bilateral_sigma_color'],
+            sigmaSpace=self.config['bilateral_sigma_space'],
+        )
+        canny_vis = cv2.Canny(bilateral_vis, self.config['canny_low'], self.config['canny_high'])
 
         self._plot_contours(self.bgr_image, canny_vis, closed, result_img)
 
@@ -613,7 +651,12 @@ class ChartPreprocessor:
         # blockSize=2 → size of neighborhood for computing the covariance matrix
         # ksize=3     → Sobel kernel size used internally to compute gradients
         # k=0.04      → Harris sensitivity parameter (standard value)
-        harris_response = cv2.cornerHarris(gray_float, blockSize=2, ksize=3, k=0.04)
+        harris_response = cv2.cornerHarris(
+            gray_float,
+            blockSize=self.config['harris_block_size'],
+            ksize=3,
+            k=self.config['harris_k'],
+        )
 
         # dilate the response map so corner peaks are more visible in the heatmap
         harris_dilated = cv2.dilate(harris_response, None)
@@ -668,9 +711,14 @@ class ChartPreprocessor:
 
         # bilateral before Canny — same reasoning as morphological_operations:
         # smooth noise without blurring the chart border edges we want to detect
-        bilateral = cv2.bilateralFilter(gray, d=9, sigmaColor=75, sigmaSpace=75)
+        bilateral = cv2.bilateralFilter(
+            gray,
+            d=self.config['bilateral_d'],
+            sigmaColor=self.config['bilateral_sigma_color'],
+            sigmaSpace=self.config['bilateral_sigma_space'],
+        )
 
-        canny = cv2.Canny(bilateral, 50, 150)
+        canny = cv2.Canny(bilateral, self.config['canny_low'], self.config['canny_high'])
 
         # RETR_EXTERNAL is enough here — we want the outermost frame, not inner elements
         contours, _ = cv2.findContours(canny, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -763,19 +811,25 @@ class ChartPreprocessor:
         # step 1 — bilateral filter
         t0 = time.time()
         gray = cv2.cvtColor(self.bgr_image, cv2.COLOR_BGR2GRAY)
-        filtered = cv2.bilateralFilter(gray, d=9, sigmaColor=75, sigmaSpace=75)
+        filtered = cv2.bilateralFilter(
+            gray,
+            d=self.config['bilateral_d'],
+            sigmaColor=self.config['bilateral_sigma_color'],
+            sigmaSpace=self.config['bilateral_sigma_space'],
+        )
         results['filtered_image'] = filtered
         print(f"[1] bilateral filter      — {time.time()-t0:.3f}s  shape={filtered.shape}")
 
         # step 2 — canny edges
         t0 = time.time()
-        edges = cv2.Canny(filtered, 50, 150)
+        edges = cv2.Canny(filtered, self.config['canny_low'], self.config['canny_high'])
         results['edges'] = edges
         print(f"[2] canny edges           — {time.time()-t0:.3f}s  nonzero={np.count_nonzero(edges)} px")
 
         # step 3 — morphological closing
         t0 = time.time()
-        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+        ks = self.config['morph_kernel_size']
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (ks, ks))
         morphed = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel)
         results['morphed'] = morphed
         print(f"[3] morphological closing — {time.time()-t0:.3f}s  nonzero={np.count_nonzero(morphed)} px")
