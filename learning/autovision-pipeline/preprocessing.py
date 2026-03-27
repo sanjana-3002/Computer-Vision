@@ -738,6 +738,88 @@ class ChartPreprocessor:
         plt.show()
         print("Saved: day4_contours.png")
 
+    def run_full_pipeline(self):
+        """
+        Runs the full Day 1–4 preprocessing chain in order and returns all outputs.
+
+        Steps:
+            1. Bilateral filter (smooths noise, keeps edges)
+            2. Canny edge detection
+            3. Morphological closing (fills gaps in edges)
+            4. Contour detection (finds candle regions)
+            5. Chart isolation (crops out device frame)
+
+        Prints how long each step took and what it returned.
+        Saves a 5-panel summary visualization as pipeline_output.png.
+
+        Returns:
+            dict with keys: filtered_image, edges, morphed, contours, isolated_chart
+        """
+        import time
+
+        print("\n=== Running full pipeline ===")
+        results = {}
+
+        # step 1 — bilateral filter
+        t0 = time.time()
+        gray = cv2.cvtColor(self.bgr_image, cv2.COLOR_BGR2GRAY)
+        filtered = cv2.bilateralFilter(gray, d=9, sigmaColor=75, sigmaSpace=75)
+        results['filtered_image'] = filtered
+        print(f"[1] bilateral filter      — {time.time()-t0:.3f}s  shape={filtered.shape}")
+
+        # step 2 — canny edges
+        t0 = time.time()
+        edges = cv2.Canny(filtered, 50, 150)
+        results['edges'] = edges
+        print(f"[2] canny edges           — {time.time()-t0:.3f}s  nonzero={np.count_nonzero(edges)} px")
+
+        # step 3 — morphological closing
+        t0 = time.time()
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+        morphed = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel)
+        results['morphed'] = morphed
+        print(f"[3] morphological closing — {time.time()-t0:.3f}s  nonzero={np.count_nonzero(morphed)} px")
+
+        # step 4 — contour detection (reuses full find_candle_contours logic)
+        t0 = time.time()
+        contours = self.find_candle_contours()
+        results['contours'] = contours
+        print(f"[4] contour detection     — {time.time()-t0:.3f}s  found={len(contours)} regions")
+
+        # step 5 — chart region isolation
+        t0 = time.time()
+        isolated = self.isolate_chart_region()
+        results['isolated_chart'] = isolated
+        print(f"[5] chart isolation       — {time.time()-t0:.3f}s  output shape={isolated.shape[:2]}")
+
+        print("\n=== Pipeline complete ===")
+
+        self._plot_pipeline(filtered, edges, morphed, isolated)
+
+        return results
+
+    def _plot_pipeline(self, filtered, edges, morphed, isolated):
+        fig, axes = plt.subplots(1, 5, figsize=(25, 5))
+        fig.suptitle('Full Pipeline: Day 1–4 Summary', fontsize=16)
+
+        original_rgb  = cv2.cvtColor(self.bgr_image, cv2.COLOR_BGR2RGB)
+        isolated_rgb  = cv2.cvtColor(isolated,       cv2.COLOR_BGR2RGB)
+
+        images = [original_rgb, filtered, edges, morphed, isolated_rgb]
+        titles = ['1. Original', '2. Bilateral Filter', '3. Canny Edges',
+                  '4. After Closing', '5. Isolated Chart']
+        cmaps  = [None, 'gray', 'gray', 'gray', None]
+
+        for ax, img, title, cmap in zip(axes, images, titles, cmaps):
+            ax.imshow(img, cmap=cmap)
+            ax.set_title(title)
+            ax.axis('off')
+
+        plt.tight_layout()
+        plt.savefig('pipeline_output.png', dpi=150, bbox_inches='tight')
+        plt.show()
+        print("Saved: pipeline_output.png")
+
 
 # ------------------------------------------------------------------
 # ENTRY POINT
